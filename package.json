@@ -1,0 +1,7 @@
+{
+  "name": "proofpilot-demo",
+  "private": true,
+  "type": "module",
+  "scripts": { "demo": "node demo/client.mjs" },
+  "dependencies": { "@solana/web3.js": "^1.98.0" }
+}
