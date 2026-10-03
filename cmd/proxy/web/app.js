@@ -157,14 +157,21 @@ async function runDemo() {
     const solana = provider();
     const connection = new solanaWeb3.Connection('https://api.devnet.solana.com', 'confirmed');
     const recipientKey = new solanaWeb3.PublicKey(recipient);
+    const balance = await connection.getBalance(wallet, 'confirmed');
+    const needed = lamports + 10_000; // сумма + запас на комиссию
+    if (balance < needed) {
+      throw new Error(`На Devnet у кошелька ${shortAddress(wallet.toString())} всего ${(balance / 1e9).toFixed(6)} SOL. Нужно минимум ${(needed / 1e9).toFixed(6)} SOL. Получите SOL на https://faucet.solana.com (сеть Devnet).`);
+    }
     const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
     const transaction = new solanaWeb3.Transaction({ feePayer: wallet, recentBlockhash: blockhash })
       .add(solanaWeb3.SystemProgram.transfer({ fromPubkey: wallet, toPubkey: recipientKey, lamports }));
 
     setStatus(`Подтвердите перевод ${(lamports / 1_000_000_000).toFixed(8)} SOL в Phantom…`, 'working');
     buttonCopy.textContent = 'Ожидание подтверждения в Phantom…';
+    // Phantom отправляет в сеть, выбранную в кошельке (должен быть Solana Devnet).
     const result = await solana.signAndSendTransaction(transaction, { preflightCommitment: 'confirmed' });
-    const signature = typeof result === 'string' ? result : base58(result.signature);
+    const signature = typeof result === 'string' ? result : (result.signature?.length ? (typeof result.signature === 'string' ? result.signature : base58(result.signature)) : '');
+    if (!signature) throw new Error('Phantom не вернул подпись транзакции.');
     setStatus('Платёж отправлен. Ждём подтверждение Solana…', 'working');
     const confirmation = await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
     if (confirmation.value.err) throw new Error('Транзакция отклонена сетью Solana.');
@@ -182,7 +189,7 @@ async function runDemo() {
     setStatus('Готово. Платёж подтверждён, ответ получен.', 'success');
   } catch (error) {
     const message = error?.message || 'Не удалось выполнить запрос.';
-    setStatus(message.includes('User rejected') ? 'Вы отменили транзакцию в Phantom.' : message, 'error');
+    setStatus(message.includes('User rejected') ? 'Вы отменили транзакцию в Phantom.' : /Blockhash not found/i.test(message) ? 'Блокхеш устарел (окно Phantom было открыто слишком долго). Нажмите кнопку ещё раз и подтвердите быстрее.' : message, 'error');
   } finally {
     busy = false;
     askButton.disabled = false;
