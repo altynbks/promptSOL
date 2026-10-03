@@ -1,0 +1,23 @@
+services:
+  proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  demo:
+    build:
+      context: .
+      dockerfile: Dockerfile.demo
+    profiles: ["demo"]
+    env_file: .env
+    environment:
+      PROXY_URL: http://proxy:8080/v1/chat/completions
+      SOLANA_KEYPAIR_PATH: /run/secrets/solana-keypair.json
+    volumes:
+      - ./wallet.json:/run/secrets/solana-keypair.json:ro
+    depends_on:
+      - proxy

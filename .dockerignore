@@ -1,6 +1,7 @@
-.gocache/
-proxy.exe
+.git
+.gocache
+node_modules
+*.exe
 build-output.txt
-node_modules/
 .env
 wallet.json

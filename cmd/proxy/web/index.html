@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10120f" />
+    <title>ProofPilot — AI на Solana</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="ProofPilot главная">
+        <span class="brand-mark"><span></span><span></span><span></span><span></span></span>
+        <span>proofpilot<span class="brand-period">.</span></span>
+      </a>
+      <div class="top-meta">
+        <span class="network-pill"><span class="live-dot"></span> SOLANA DEVNET</span>
+        <span class="top-divider"></span>
+        <span class="powered">POWERED BY <b>GEMINI</b></span>
+      </div>
+      <button id="connect-button" class="wallet-button" type="button">
+        <span class="wallet-icon">◈</span><span id="wallet-label">Подключить кошелёк</span>
+      </button>
+    </header>
+
+    <main class="layout">
+      <section class="intro">
+        <div class="eyebrow"><span class="eyebrow-line"></span> МИКРОПЛАТЕЖИ ДЛЯ ИИ</div>
+        <h1>Сначала оплата.<br /><span>Потом ответ.</span></h1>
+        <p class="intro-copy">Один запрос к Gemini — один платёж в SOL. Без аккаунтов, подписок и лишних шагов.</p>
+
+        <div class="steps" aria-label="Как это работает">
+          <div class="step active-step">
+            <div class="step-index">01</div>
+            <div><strong>Задайте вопрос</strong><span>Напишите промпт для Gemini</span></div>
+            <span class="step-check">✓</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step">
+            <div class="step-index">02</div>
+            <div><strong>Подтвердите платёж</strong><span>Кошелёк отправит SOL в Devnet</span></div>
+            <span class="step-check">✓</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step">
+            <div class="step-index">03</div>
+            <div><strong>Получите ответ</strong><span>Оплата проверяется в Solana</span></div>
+            <span class="step-check">✓</span>
+          </div>
+        </div>
+
+        <div class="network-note"><span class="note-icon">i</span><span>Для демо нужен кошелёк Phantom в сети <b>Devnet</b> и тестовые SOL.</span></div>
+      </section>
+
+      <section class="demo-card" aria-label="Демо ProofPilot">
+        <div class="card-topline">
+          <div class="card-heading"><span class="sparkle">✳</span><div><h2>AI-запрос</h2><p>Оплата за одно сообщение</p></div></div>
+          <span class="model-pill"><span></span> GEMINI FLASH</span>
+        </div>
+
+        <div class="prompt-label"><span>ВАШ ВОПРОС</span><span class="prompt-hint">Shift + Enter — новая строка</span></div>
+        <textarea id="prompt" maxlength="1000" placeholder="Например: объясни, как работает x402, в двух предложениях…">Объясни, как работает оплата запросов к ИИ через Solana, в двух предложениях.</textarea>
+        <div class="prompt-footer"><span><span class="tiny-dot"></span> Один запрос · потоковый ответ</span><span id="char-count">0 / 1000</span></div>
+
+        <div class="payment-summary">
+          <div class="summary-label">СТОИМОСТЬ ЗАПРОСА</div>
+          <div class="price-row"><strong id="price">0.00001</strong><span>SOL</span><span class="price-usd">≈ 10 000 lamports</span></div>
+          <div class="recipient"><span>Получатель</span><code id="recipient">будет показан перед оплатой</code><button id="copy-address" type="button" title="Скопировать адрес" aria-label="Скопировать адрес" disabled>▢</button></div>
+        </div>
+
+        <button id="ask-button" class="ask-button" type="button"><span class="button-copy">Подключить кошелёк и спросить</span><span class="button-arrow">↗</span></button>
+        <div id="status" class="status" role="status" aria-live="polite"><span class="status-icon">●</span><span id="status-text">Подключите Phantom, чтобы начать демо</span></div>
+
+        <div id="response-panel" class="response-panel hidden">
+          <div class="response-head"><span class="response-avatar">✳</span><div><strong>Ответ Gemini</strong><span id="response-meta">Потоковый ответ</span></div><span class="response-live"><i></i> LIVE</span></div>
+          <div id="response-text" class="response-text"></div>
+        </div>
+        <div class="card-foot"><span>Транзакция подтверждается в Solana Devnet</span><span class="solana-mark">◎</span></div>
+      </section>
+    </main>
+
+    <footer class="footer"><span>PROOFPILOT <span class="footer-dash">/</span> PAY-PER-REQUEST AI</span><span>Демо-среда · Solana Devnet</span></footer>
+  </body>
+</html>

@@ -1,14 +1,27 @@
 # ProofPilot: Solana x402 AI Proxy Gateway
 
-Minimal Go gateway for a fixed-price, native SOL payment on Solana Devnet. A request without a payment signature receives HTTP 402 with the recipient and price. A confirmed transfer unlocks one request to the OpenAI-compatible upstream. Responses, including SSE, stream through Go's `httputil.ReverseProxy`.
+Minimal Go gateway for a fixed-price, native SOL payment on Solana Devnet. A request without a payment signature receives HTTP 402 with the recipient and price. A confirmed transfer unlocks one request to an OpenAI-compatible upstream such as Gemini. Responses, including SSE, stream through Go's `httputil.ReverseProxy`.
 
-## Run
+## Run with Docker
 
-1. Copy `.env.example` values into your shell environment. Set a Devnet recipient wallet and `OPENAI_API_KEY`.
-2. Start the proxy with `go run ./cmd/proxy`.
-3. In another terminal, install the demo dependency with `npm install`, set `SOLANA_KEYPAIR_PATH` to a funded Devnet keypair JSON file, and run `npm run demo`.
+1. Copy `.env.example` to `.env` and set `SOLANA_WALLET_ADDRESS` to the recipient wallet and `UPSTREAM_API_KEY` to your Gemini API key from Google AI Studio.
+2. Start the proxy:
 
-The wallet keypair file is read locally by the demo. Fund it with Devnet SOL before running. Set `PROXY_URL` to change the endpoint.
+   ```sh
+   docker compose up --build -d proxy
+   ```
+
+   Open `http://localhost:8080` for the demo interface. Connect Phantom on Solana Devnet, enter a prompt, approve the SOL transfer, and the Gemini response will stream into the page. Each successful request consumes one payment.
+
+The optional terminal demo is also available. Put a funded Devnet keypair JSON file at `wallet.json` in the project directory, then run:
+
+```sh
+docker compose --profile demo run --build --rm demo
+```
+
+The demo container mounts `wallet.json` read-only and sends requests to Gemini using the OpenAI compatible endpoint. `UPSTREAM_BASE_URL` points to that endpoint by default, and `AI_MODEL` defaults to `gemini-3.8-flash`. You can change `PROXY_URL` or `SOLANA_RPC_URL` in `.env`. The proxy and demo use the Devnet RPC by default.
+
+Stop the proxy with `docker compose down`.
 
 ## Payment behavior
 
@@ -20,4 +33,4 @@ The wallet keypair file is read locally by the demo. Fund it with Devnet SOL bef
 
 ## Configuration
 
-See `.env.example`. Required: `SOLANA_WALLET_ADDRESS`, `OPENAI_API_KEY`. The default price is 10,000 lamports. `OPENAI_BASE_URL` can point to an OpenAI-compatible service.
+See `.env.example`. Required: `SOLANA_WALLET_ADDRESS`, `UPSTREAM_API_KEY`. The default upstream is Gemini's OpenAI-compatible API; `UPSTREAM_BASE_URL` can point to another compatible service. The default price is 10,000 lamports.
