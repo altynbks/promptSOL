@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10120f" />
+    <title>Solana x402 AI Proxy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Solana x402 AI Proxy — главная">
+        <span class="brand-mark"><span></span><span></span><span></span><span></span></span>
+        <span class="brand-name">Solana <b>x402</b> <span class="brand-suffix">AI Proxy</span></span>
+      </a>
+      <div class="top-meta">
+        <span class="network-pill"><span class="live-dot"></span> SOLANA DEVNET</span>
+        <span class="top-divider"></span>
+        <span class="powered">POWERED BY <b>GEMINI</b></span>
+      </div>
+      <button id="connect-button" class="wallet-button" type="button">
+        <span class="wallet-icon">◈</span><span id="wallet-label">Подключить кошелёк</span>
+      </button>
+    </header>
+
+    <main class="layout">
+      <section class="intro">
+        <div class="eyebrow"><span class="eyebrow-line"></span> МИКРОПЛАТЕЖИ ДЛЯ ИИ</div>
+        <h1>Один вопрос.<br /><span>Оплата по токенам.</span></h1>
+        <p class="intro-copy">Подключите Phantom, проверьте точную цену и подтвердите перевод в Devnet. Ответ появится после оплаты.</p>
+
+        <div class="steps" role="list" aria-label="4 шага до ответа">
+          <div class="step" data-step="0" data-state="current" role="listitem" aria-current="step">
+            <div class="step-index">01</div>
+            <div><strong>Подключите Phantom</strong><span>Нужен кошелёк в сети Devnet</span></div>
+            <span class="step-check" aria-hidden="true">●</span>
+          </div>
+          <div class="step-connector" aria-hidden="true"></div>
+          <div class="step" data-step="1" data-state="upcoming" role="listitem">
+            <div class="step-index">02</div>
+            <div><strong>Введите вопрос</strong><span>Сначала увидите число токенов и цену</span></div>
+            <span class="step-check" aria-hidden="true"></span>
+          </div>
+          <div class="step-connector" aria-hidden="true"></div>
+          <div class="step" data-step="2" data-state="upcoming" role="listitem">
+            <div class="step-index">03</div>
+            <div><strong>Проверьте цену и оплатите</strong><span>Подтвердите точную сумму в Phantom</span></div>
+            <span class="step-check" aria-hidden="true"></span>
+          </div>
+          <div class="step-connector" aria-hidden="true"></div>
+          <div class="step" data-step="3" data-state="upcoming" role="listitem">
+            <div class="step-index">04</div>
+            <div><strong>Получите ответ</strong><span>Он откроется после подтверждения в Solana</span></div>
+            <span class="step-check" aria-hidden="true"></span>
+          </div>
+        </div>
+
+        <div class="network-note"><span class="note-icon">i</span><span>Для демо нужен кошелёк Phantom в сети <b>Devnet</b> и тестовые SOL.</span></div>
+      </section>
+
+      <section class="demo-card" aria-label="Демо Solana x402 AI Proxy">
+        <div class="card-topline">
+          <div class="card-heading"><span class="sparkle">✳</span><div><h2>AI-запрос</h2><p>Оплата по фактическим токенам</p></div></div>
+          <span class="model-pill"><span></span> <span id="model-label">GEMINI FLASH</span></span>
+        </div>
+
+        <label class="prompt-label" for="prompt"><span>Ваш вопрос</span><span class="prompt-hint">Enter — отправить · Shift + Enter — новая строка</span></label>
+        <textarea id="prompt" maxlength="1000" aria-describedby="prompt-guidance char-count" placeholder="Например: объясни, как работает pay-per-token…"></textarea>
+        <div class="prompt-footer"><span id="prompt-guidance"><span class="tiny-dot"></span>Обычно 3–5 предложений с примером · инструкция сервиса входит в цену</span><span id="char-count">0 / 1000</span></div>
+
+        <div class="payment-summary">
+          <div id="summary-label" class="summary-label">СТАВКА ЗА ТОКЕН</div>
+          <div class="price-row"><strong id="price">10</strong><span id="price-unit">lamports / токен</span><span id="price-sol" class="price-usd">0.00000001 SOL / токен</span></div>
+          <div class="recipient"><span>Получатель</span><code id="recipient">будет показан перед оплатой</code><button id="copy-address" type="button" title="Скопировать адрес" aria-label="Скопировать адрес" disabled>▢</button></div>
+        </div>
+
+        <button id="ask-button" class="ask-button" type="button"><span class="button-copy">Подключить Phantom</span><span class="button-arrow" aria-hidden="true">↗</span></button>
+        <div id="status" class="status" role="status" aria-live="polite"><span class="status-icon">●</span><span id="status-text">Шаг 1 из 4: подключите Phantom. После подключения введите вопрос.</span><button id="retry-button" class="retry-button hidden" type="button">Повторить</button></div>
+
+        <div id="response-panel" class="response-panel hidden">
+          <div class="response-head"><span class="response-avatar">✳</span><div><strong>Ответ Gemini</strong><span id="response-meta">Оплаченный ответ</span></div><span class="response-live"><i></i> ГОТОВО</span></div>
+          <div id="response-text" class="response-text"></div>
+        </div>
+        <div class="card-foot"><span>Транзакция подтверждается в Solana Devnet</span><span class="solana-mark">◎</span></div>
+      </section>
+    </main>
+
+    <footer class="footer"><span>SOLANA X402 AI PROXY</span><span>Демо-среда · Solana Devnet</span></footer>
+  </body>
+</html>

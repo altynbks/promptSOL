@@ -1,0 +1,29 @@
+# Environment files can contain provider credentials. Keep only the safe template.
+.env*
+!.env.example
+
+# Local Solana signing material and other private keys.
+wallet.json
+wallet*.json
+*.key
+*.pem
+*.p12
+*.pfx
+*.der
+*.ppk
+*.seed
+*.mnemonic
+id_rsa*
+id_ed25519*
+*keypair*.json
+secrets/
+**/secrets/
+
+# Build and dependency artifacts.
+.gocache/
+proxy.exe
+proofpilot.exe
+build-output.txt
+node_modules/
+dist/
+coverage/
