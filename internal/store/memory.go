@@ -38,3 +38,13 @@ func (c *MemoryCache) Claim(signature string) bool {
 	c.items[signature] = el
 	return true
 }
+
+// Release makes a failed request's payment signature available for retry.
+func (c *MemoryCache) Release(signature string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if el, ok := c.items[signature]; ok {
+		c.lru.Remove(el)
+		delete(c.items, signature)
+	}
+}

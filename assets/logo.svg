@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" role="img" aria-labelledby="title">
+  <title id="title">Solana x402 AI Proxy mark</title>
+  <rect width="160" height="160" rx="34" fill="#10120f" />
+  <g transform="rotate(-12 80 80)">
+    <rect x="48" y="48" width="27" height="27" rx="8" fill="#c4f269" />
+    <rect x="85" y="48" width="27" height="27" rx="8" fill="#c4f269" opacity=".58" />
+    <rect x="48" y="85" width="27" height="27" rx="8" fill="#c4f269" opacity=".58" />
+    <rect x="85" y="85" width="27" height="27" rx="8" fill="#c4f269" />
+  </g>
+</svg>
