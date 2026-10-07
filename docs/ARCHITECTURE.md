@@ -10,8 +10,8 @@ flowchart LR
     UI -->|Phantom transfer| SOL[Solana Devnet]
     UI -->|paid chat + signature| API
     API -->|verify transaction| SOL
-    API -->|primary request| GEM[Gemini]
-    API -->|fallback on 429 / 503| GROQ[Groq]
+    API -->|primary when configured| GROQ[Groq]
+    API -->|fallback / default without Groq key| GEM[Gemini]
     GEM -->|SSE response| API
     GROQ -->|SSE response| API
     API -->|answer + provider headers| UI
@@ -25,8 +25,8 @@ flowchart LR
 4. The browser sends the same payload to `/v1/chat/completions` with `X-Payment-Signature`.
 5. Payment middleware recalculates the required amount from the request body and asks the Solana RPC to verify the signature, recipient, amount, and confirmation.
 6. The in-memory cache claims the signature so it cannot unlock a second request.
-7. The proxy sends the request to Gemini. It retries HTTP 429 and 503 responses, then optionally sends the request to Groq.
-8. The server streams the response to the browser and marks the provider with `X-AI-Provider`; Groq fallback also includes `X-AI-Model`.
+7. When `GROQ_API_KEY` is configured, the proxy sends requests to Groq first and uses Gemini as a fallback. Without Groq, Gemini is used directly. It retries transient availability errors before switching providers.
+8. The server streams the response to the browser and marks the provider and model with `X-AI-Provider` and `X-AI-Model`.
 
 Requests to the paid endpoint without a signature receive HTTP 402. The browser UI uses the quote endpoint before payment rather than relying on that challenge response.
 

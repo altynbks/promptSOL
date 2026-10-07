@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"time"
 
 	"ai-solana-proxy/internal/config"
@@ -23,7 +24,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	upstream, err := proxy.NewOpenAIProxy(cfg.UpstreamURL, cfg.UpstreamKey, cfg.GroqURL, cfg.GroqKey, cfg.GroqModel)
+	primaryProvider := "Gemini"
+	primaryModel := cfg.GeminiModel
+	var upstream *httputil.ReverseProxy
+	if cfg.GroqKey != "" {
+		primaryProvider = "Groq"
+		primaryModel = cfg.GroqModel
+		upstream, err = proxy.NewRoutedOpenAIProxy(cfg.GroqURL, cfg.GroqKey, "Groq", cfg.GroqModel, cfg.UpstreamURL, cfg.UpstreamKey, "Gemini", cfg.GeminiModel)
+	} else {
+		upstream, err = proxy.NewOpenAIProxy(cfg.UpstreamURL, cfg.UpstreamKey, "", "", "")
+	}
 	if err != nil {
 		log.Fatalf("configure AI upstream: %v", err)
 	}
@@ -51,6 +61,8 @@ func main() {
 		}
 		quoteBody := map[string]any{
 			"pay_to":          cfg.Wallet,
+			"ai_provider":     primaryProvider,
+			"ai_model":        primaryModel,
 			"amount":          quote.Amount,
 			"input_tokens":    quote.InputTokens,
 			"output_tokens":   quote.OutputTokens,
@@ -65,11 +77,11 @@ func main() {
 	})
 	mux.Handle("/", http.FileServer(http.FS(web)))
 	server := &http.Server{Addr: cfg.ListenAddr, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
-	log.Printf("PromptSOL listening on %s; RPC=%s", cfg.ListenAddr, cfg.RPCURL)
+	log.Printf("PromptSOL listening on %s; RPC=%s; primary AI=%s", cfg.ListenAddr, cfg.RPCURL, primaryProvider)
 	if cfg.GroqKey == "" {
-		log.Printf("Groq fallback is disabled; set GROQ_API_KEY to enable it")
+		log.Printf("Groq is disabled; set GROQ_API_KEY to use it as the primary provider")
 	} else {
-		log.Printf("Groq fallback is enabled; model=%s", cfg.GroqModel)
+		log.Printf("Gemini fallback is enabled; Groq model=%s", cfg.GroqModel)
 	}
 	log.Fatal(server.ListenAndServe())
 }

@@ -14,6 +14,7 @@ type Config struct {
 	GroqURL          string
 	GroqKey          string
 	GroqModel        string
+	GeminiModel      string
 	Wallet           string
 	Price            uint64
 	InputTokenPrice  uint64
@@ -31,6 +32,7 @@ func Load() (Config, error) {
 		GroqURL:          env("GROQ_BASE_URL", "https://api.groq.com/openai"),
 		GroqKey:          os.Getenv("GROQ_API_KEY"),
 		GroqModel:        env("GROQ_MODEL", "openai/gpt-oss-20b"),
+		GeminiModel:      env("GEMINI_MODEL", "gemini-3.8-flash"),
 		Wallet:           os.Getenv("SOLANA_WALLET_ADDRESS"),
 		Price:            1000,
 		InputTokenPrice:  2000,

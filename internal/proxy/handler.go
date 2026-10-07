@@ -15,6 +15,10 @@ import (
 )
 
 func NewOpenAIProxy(targetURL, apiKey, fallbackURL, fallbackKey, fallbackModel string) (*httputil.ReverseProxy, error) {
+	return NewRoutedOpenAIProxy(targetURL, apiKey, "Gemini", "", fallbackURL, fallbackKey, "Groq", fallbackModel)
+}
+
+func NewRoutedOpenAIProxy(targetURL, apiKey, primaryProvider, primaryModel, fallbackURL, fallbackKey, fallbackProvider, fallbackModel string) (*httputil.ReverseProxy, error) {
 	target, err := url.Parse(targetURL)
 	if err != nil {
 		return nil, err
@@ -23,7 +27,12 @@ func NewOpenAIProxy(targetURL, apiKey, fallbackURL, fallbackKey, fallbackModel s
 		return nil, &url.Error{Op: "parse", URL: targetURL, Err: errInvalidTarget{}}
 	}
 	p := httputil.NewSingleHostReverseProxy(target)
-	transport := retryTransport{base: http.DefaultTransport, maxRetries: 2, primaryPathPrefix: target.Path}
+	baseTransport := http.DefaultTransport.(*http.Transport).Clone()
+	// If the provider accepts a connection but never starts its response, fail
+	// over instead of leaving the paid request stuck indefinitely.
+	baseTransport.ResponseHeaderTimeout = 12 * time.Second
+	baseTransport.TLSHandshakeTimeout = 10 * time.Second
+	transport := retryTransport{base: baseTransport, maxRetries: 1, primaryPathPrefix: target.Path, primaryModel: primaryModel, primaryProvider: primaryProvider, fallbackProvider: fallbackProvider}
 	if fallbackKey != "" {
 		fallback, err := url.Parse(fallbackURL)
 		if err != nil {
@@ -46,7 +55,10 @@ func NewOpenAIProxy(targetURL, apiKey, fallbackURL, fallbackKey, fallbackModel s
 	}
 	p.ModifyResponse = func(resp *http.Response) error {
 		if resp.Header.Get("X-AI-Provider") == "" {
-			resp.Header.Set("X-AI-Provider", "Gemini")
+			resp.Header.Set("X-AI-Provider", primaryProvider)
+		}
+		if resp.Header.Get("X-AI-Model") == "" && primaryModel != "" {
+			resp.Header.Set("X-AI-Model", primaryModel)
 		}
 		if resp.StatusCode >= http.StatusBadRequest {
 			log.Printf("AI upstream returned status=%d", resp.StatusCode)
@@ -71,6 +83,9 @@ type retryTransport struct {
 	fallbackURL       *url.URL
 	fallbackKey       string
 	fallbackModel     string
+	primaryModel      string
+	primaryProvider   string
+	fallbackProvider  string
 }
 
 func (t retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -93,17 +108,33 @@ func (t retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			_ = req.Body.Close()
 		}
 	}
+	if t.primaryModel != "" {
+		var err error
+		bodyBytes, err = replaceModel(bodyBytes, t.primaryModel)
+		if err != nil {
+			return nil, fmt.Errorf("prepare %s request: %w", t.primaryProvider, err)
+		}
+	}
 
 	var resp *http.Response
 	for attempt := 0; ; attempt++ {
 		attemptReq := req.Clone(req.Context())
 		if req.Body != nil {
 			attemptReq.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+			attemptReq.ContentLength = int64(len(bodyBytes))
+			attemptReq.Header.Del("Content-Length")
+			attemptReq.GetBody = func() (io.ReadCloser, error) {
+				return io.NopCloser(bytes.NewReader(bodyBytes)), nil
+			}
 		}
 
 		var err error
 		resp, err = t.base.RoundTrip(attemptReq)
 		if err != nil {
+			if t.fallbackURL != nil {
+				log.Printf("primary AI provider request failed; falling back to %s: %v", t.fallbackProvider, err)
+				break
+			}
 			return nil, err
 		}
 		if resp.StatusCode != http.StatusServiceUnavailable && resp.StatusCode != http.StatusTooManyRequests {
@@ -129,13 +160,15 @@ func (t retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if t.fallbackURL == nil {
 		return resp, nil
 	}
-	log.Printf("primary AI provider unavailable (status=%d); falling back to Groq model %s", resp.StatusCode, t.fallbackModel)
-	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 64<<10))
-	_ = resp.Body.Close()
+	if resp != nil {
+		log.Printf("primary AI provider unavailable (status=%d); falling back to %s model %s", resp.StatusCode, t.fallbackProvider, t.fallbackModel)
+		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 64<<10))
+		_ = resp.Body.Close()
+	}
 
 	fallbackBody, err := replaceModel(bodyBytes, t.fallbackModel)
 	if err != nil {
-		return nil, fmt.Errorf("prepare Groq fallback request: %w", err)
+		return nil, fmt.Errorf("prepare %s fallback request: %w", t.fallbackProvider, err)
 	}
 	fallbackReq := req.Clone(req.Context())
 	fallbackReq.URL.Scheme = t.fallbackURL.Scheme
@@ -157,9 +190,9 @@ func (t retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 	fallbackResp, err := t.base.RoundTrip(fallbackReq)
 	if err != nil {
-		return nil, fmt.Errorf("Groq fallback request: %w", err)
+		return nil, fmt.Errorf("%s fallback request: %w", t.fallbackProvider, err)
 	}
-	fallbackResp.Header.Set("X-AI-Provider", "Groq")
+	fallbackResp.Header.Set("X-AI-Provider", t.fallbackProvider)
 	fallbackResp.Header.Set("X-AI-Model", t.fallbackModel)
 	return fallbackResp, nil
 }

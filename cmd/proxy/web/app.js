@@ -93,17 +93,28 @@ function setWallet(publicKey) {
 }
 
 async function connectWallet() {
+  if (connectButton.disabled) return;
   const solana = provider();
   if (!solana) {
     setStatus('Phantom was not found. Install the Phantom extension, then refresh this page.', 'error');
     window.open('https://phantom.app/', '_blank', 'noopener,noreferrer');
     return;
   }
+  connectButton.disabled = true;
+  connectButton.classList.add('is-loading');
+  connectButton.setAttribute('aria-busy', 'true');
+  walletLabel.textContent = 'Connecting…';
+  setStatus('Check Phantom to approve the wallet connection…', 'working');
   try {
     const result = await solana.connect();
     setWallet(result.publicKey ?? solana.publicKey);
   } catch (error) {
     setStatus(error.message || 'Could not connect to Phantom.', 'error');
+  } finally {
+    connectButton.disabled = false;
+    connectButton.classList.remove('is-loading');
+    connectButton.removeAttribute('aria-busy');
+    if (!wallet) walletLabel.textContent = 'Connect wallet';
   }
 }
 
@@ -203,6 +214,7 @@ async function streamAnswer(response, providerName) {
   let buffer = '';
   let firstToken = true;
   let finished = false;
+  let receivedDone = false;
   let finishReason = null;
   while (!finished) {
     const { value, done } = await reader.read();
@@ -213,7 +225,11 @@ async function streamAnswer(response, providerName) {
     for (const line of lines) {
       if (!line.startsWith('data:')) continue;
       const data = line.slice(5).trim();
-      if (!data || data === '[DONE]') continue;
+      if (!data) continue;
+      if (data === '[DONE]') {
+        receivedDone = true;
+        continue;
+      }
       try {
         const chunk = JSON.parse(data);
         const choice = chunk.choices?.[0];
@@ -236,6 +252,9 @@ async function streamAnswer(response, providerName) {
       }
     }
     finished = done;
+  }
+  if (!receivedDone) {
+    throw new Error('The AI stream ended before the answer was complete. Your payment is saved; retry without paying again.');
   }
   if (!responseText.textContent.trim()) {
     throw new Error('Gemini returned an empty response. Try again with a more specific question.');
@@ -261,6 +280,8 @@ async function runDemo() {
 
   busy = true;
   askButton.disabled = true;
+  askButton.classList.add('is-loading');
+  askButton.setAttribute('aria-busy', 'true');
   promptInput.disabled = true;
   document.querySelectorAll('.length-option').forEach((option) => { option.disabled = true; });
   responsePanel.classList.add('hidden');
@@ -308,39 +329,23 @@ async function runDemo() {
       sessionStorage.setItem(retryKeys.prompt, prompt);
       sessionStorage.setItem(retryKeys.maxTokens, String(payload.max_tokens));
     } else {
-      setStatus('Retrying Gemini with your confirmed payment. No new payment is needed…', 'working');
+      setStatus('Retrying with your confirmed payment. No new transfer is needed…', 'working');
     }
 
-    showProvider('Gemini + Groq');
-    setStatus(isPaymentRetry ? 'Using your previously confirmed payment. No new transfer is being sent…' : 'Payment confirmed. AI is preparing your answer…', 'working');
+    // Phantom is no longer involved after confirmation; show that the answer is generating.
+    buttonCopy.textContent = 'Generating answer…';
+    const activeProvider = quote.ai_provider || 'AI provider';
+    showProvider(`${activeProvider} + fallback`, quote.ai_model || '');
+    setStatus(isPaymentRetry ? 'Using your previously confirmed payment. No new transfer is being sent…' : `Payment confirmed. ${activeProvider} is preparing your answer…`, 'working');
     $('#response-meta').textContent = `Paid · ${shortAddress(signature)}`;
     upstreamWaitTimer = setTimeout(() => setStatus('AI is working on your response. The first words may take a few seconds…', 'working'), 8000);
 
-    let answer;
-    let responseModel = 'Gemini 3.8 Flash';
-    for (let attempt = 0; attempt < 3; attempt++) {
-      answer = await fetch('/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Payment-Signature': signature },
-        body: JSON.stringify(payload),
-      });
-      if ((answer.status !== 429 && answer.status !== 503) || attempt === 2) break;
-      await answer.body?.cancel();
-      setStatus(`Gemini is temporarily busy. Retrying with the same payment (${attempt + 1}/2)…`, 'working');
-      await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
-    }
+    const answer = await fetch('/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Payment-Signature': signature },
+      body: JSON.stringify(payload),
+    });
     clearTimeout(upstreamWaitTimer);
-    if (answer.status === 429 || answer.status === 503) {
-      await answer.text();
-      responseModel = 'Gemini 3.7 Flash';
-      setStatus('Gemini 3.8 Flash is busy. Switching to Gemini 3.7 Flash with the same payment…', 'working');
-      $('#response-meta').textContent = `Paid · ${shortAddress(signature)} · ${responseModel}`;
-      answer = await fetch('/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Payment-Signature': signature },
-        body: JSON.stringify({ ...payload, model: 'gemini-3.7-flash' }),
-      });
-    }
     if (!answer.ok) {
       const details = parseError(await answer.text(), `Request failed (HTTP ${answer.status}).`);
       if (answer.status === 429 || answer.status >= 500) {
@@ -355,24 +360,28 @@ async function runDemo() {
     }
 
     const aiProvider = answer.headers.get('X-AI-Provider') || 'AI provider';
-    const aiModel = answer.headers.get('X-AI-Model') || responseModel;
+    const aiModel = answer.headers.get('X-AI-Model') || 'AI model';
     showProvider(aiProvider, aiModel);
     $('#response-meta').textContent = `Paid · ${shortAddress(signature)} · ${aiProvider}`;
     setStatus(`${aiProvider} is streaming your answer…`, 'working');
+    await streamAnswer(answer, aiProvider);
+    // Keep the payment proof available until the stream is fully parsed. If the
+    // provider drops a stream mid-answer, the user can retry without paying again.
     retryPaymentSignature = '';
     sessionStorage.removeItem(retryKeys.signature);
     sessionStorage.removeItem(retryKeys.prompt);
     sessionStorage.removeItem(retryKeys.maxTokens);
-    await streamAnswer(answer, aiProvider);
     $('#response-meta').textContent = `${aiProvider} · Answer ready`;
     setStatus('Complete. Your payment is confirmed and your answer is ready.', 'success');
   } catch (error) {
     clearTimeout(upstreamWaitTimer);
     const message = error?.message || 'The request could not be completed.';
-    setStatus(retryPaymentSignature && !message.includes('User rejected') ? `Gemini is unavailable. Your payment is saved; click “Retry answer” to try again without paying. ${message}` : message.includes('User rejected') ? 'Transaction cancelled in Phantom.' : /Blockhash not found/i.test(message) ? 'The transaction blockhash expired. Click again and approve the payment promptly.' : message, 'error');
+    setStatus(retryPaymentSignature && !message.includes('User rejected') ? `The AI provider is unavailable. Your payment is saved; click “Retry answer” to try again without paying. ${message}` : message.includes('User rejected') ? 'Transaction cancelled in Phantom.' : /Blockhash not found/i.test(message) ? 'The transaction blockhash expired. Click again and approve the payment promptly.' : message, 'error');
   } finally {
     busy = false;
     askButton.disabled = false;
+    askButton.classList.remove('is-loading');
+    askButton.removeAttribute('aria-busy');
     promptInput.disabled = false;
     document.querySelectorAll('.length-option').forEach((option) => { option.disabled = false; });
     buttonCopy.textContent = retryPaymentSignature ? 'Retry answer (no new payment)' : 'Pay & get your answer';

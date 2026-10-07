@@ -1,5 +1,6 @@
 {
   "name": "promptsol-demo",
+  "description": "Pay-per-request AI on Solana Devnet with upfront price estimates, Phantom payments, streaming Groq responses, and Gemini fallback.",
   "private": true,
   "type": "module",
   "scripts": { "demo": "node demo/client.mjs" },

@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/Go-1.22-00ADD8?logo=go&logoColor=white" alt="Go 1.22" />
   <img src="https://img.shields.io/badge/Solana-Devnet-9945FF?logo=solana&logoColor=white" alt="Solana Devnet" />
   <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" alt="Docker Compose" />
-  <img src="https://img.shields.io/badge/AI-Gemini%20%2B%20Groq-8A63D2" alt="Gemini and Groq" />
+  <img src="https://img.shields.io/badge/AI-Groq%20%2B%20Gemini-8A63D2" alt="Groq and Gemini" />
 </p>
 
 <p align="center">
@@ -41,7 +41,7 @@ PromptSOL explores a simple idea: let someone pay for the AI response they need,
 |---|---|---|---|
 | Enter a question and choose Quick, Balanced, or Detailed. | See the estimated price before opening the wallet. | Confirm the native SOL transfer in Phantom on Devnet. | The proxy verifies payment, then streams the AI response. |
 
-Gemini is the primary provider. If Groq is configured and Gemini is rate-limited or unavailable, PromptSOL can retry with Groq using the same confirmed payment.
+Groq is the primary provider when `GROQ_API_KEY` is configured. Gemini remains available as a fallback, so PromptSOL can switch providers using the same confirmed payment. Without a Groq key, Gemini is used directly.
 
 ## Why this approach
 
@@ -61,7 +61,7 @@ Pitch video link will be added here.
 
 ## Run it locally
 
-You’ll need Docker Desktop, a Phantom wallet set to Solana Devnet, a Devnet recipient address, and a Gemini API key. Groq is optional.
+You’ll need Docker Desktop, a Phantom wallet set to Solana Devnet, a Devnet recipient address, and a Gemini API key. Groq is recommended as the primary provider; Gemini is the fallback.
 
 1. Copy `.env.example` to `.env`.
 2. Set `SOLANA_WALLET_ADDRESS` and `UPSTREAM_API_KEY`. Optionally set `GROQ_API_KEY`.
@@ -134,8 +134,10 @@ Paid chat requests include `X-Payment-Signature`. The proxy verifies the confirm
 | Variable | Required | Purpose |
 |---|:---:|---|
 | `SOLANA_WALLET_ADDRESS` | Yes | Devnet payment recipient. |
-| `UPSTREAM_API_KEY` | Yes | Primary Gemini API key. |
-| `GROQ_API_KEY` | No | Enables Groq fallback. |
+| `UPSTREAM_API_KEY` | Yes | Gemini API key, used as fallback when Groq is configured. |
+| `GEMINI_MODEL` | No | Gemini fallback model. Defaults to `gemini-3.8-flash`. |
+| `GROQ_API_KEY` | No | Enables Groq as the primary provider; without it, Gemini is primary. |
+| `GROQ_MODEL` | No | Groq model. Defaults to `openai/gpt-oss-20b`. |
 | `PAYMENT_LAMPORTS` | No | Minimum request charge. |
 | `INPUT_LAMPORTS_PER_1K_TOKENS` | No | Estimated input rate. |
 | `OUTPUT_LAMPORTS_PER_1K_TOKENS` | No | Output allowance rate. |

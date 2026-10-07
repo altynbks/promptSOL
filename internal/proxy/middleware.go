@@ -2,11 +2,13 @@ package proxy
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"ai-solana-proxy/internal/solana"
 	"ai-solana-proxy/internal/store"
@@ -61,9 +63,13 @@ func (m *PaymentMiddleware) Wrap(next http.Handler) http.Handler {
 			http.Error(w, "Transaction already used or payment cache full", http.StatusPaymentRequired)
 			return
 		}
+		// Bound the full upstream request, including time spent streaming its body.
+		// A slow or stalled model must not leave the client waiting indefinitely.
+		ctx, cancel := context.WithTimeout(r.Context(), 90*time.Second)
+		defer cancel()
 		tracked := &responseStatusWriter{ResponseWriter: w}
-		next.ServeHTTP(tracked, r)
-		if tracked.statusCode >= http.StatusBadRequest {
+		next.ServeHTTP(tracked, r.WithContext(ctx))
+		if tracked.statusCode >= http.StatusBadRequest || ctx.Err() != nil {
 			m.Cache.Release(sig)
 		}
 	})
