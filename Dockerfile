@@ -3,9 +3,9 @@ WORKDIR /src
 COPY go.mod ./
 COPY cmd ./cmd
 COPY internal ./internal
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -o /solana-x402-ai-proxy ./cmd/proxy
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -o /promptsol ./cmd/proxy
 
 FROM gcr.io/distroless/static-debian12:nonroot
-COPY --from=build /solana-x402-ai-proxy /solana-x402-ai-proxy
+COPY --from=build /promptsol /promptsol
 EXPOSE 8080
-ENTRYPOINT ["/solana-x402-ai-proxy"]
+ENTRYPOINT ["/promptsol"]

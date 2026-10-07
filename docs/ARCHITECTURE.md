@@ -1,6 +1,6 @@
 # Architecture
 
-Solana x402 AI Proxy is a small Go HTTP server with an embedded browser client. The server owns price calculation, transaction verification, replay protection, and provider failover. The browser is responsible for wallet interaction and presenting the streamed answer.
+PromptSOL is a small Go HTTP server with an embedded browser client. The server owns price calculation, transaction verification, replay protection, and provider failover. The browser is responsible for wallet interaction and presenting the streamed answer.
 
 ## Components
 

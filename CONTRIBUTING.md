@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve Solana x402 AI Proxy. Keep changes focused, document user-visible behavior, and avoid committing credentials or wallet material.
+Thanks for helping improve PromptSOL. Keep changes focused, document user-visible behavior, and avoid committing credentials or wallet material.
 
 ## Before opening a pull request
 

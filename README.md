@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="Solana x402 AI Proxy logo" width="104" />
+  <img src="assets/logo.svg" alt="PromptSOL logo" width="104" />
 </p>
 
-<h1 align="center">Solana x402 AI Proxy</h1>
-<h3 align="center">Pay per request. Get a useful AI answer.</h3>
+<h1 align="center">PromptSOL</h1>
+<h3 align="center">Pay-per-request AI on Solana.</h3>
 
 <p align="center">
   A payment-gated AI proxy built with Go and Solana. Connect Phantom, get a clear quote, and watch Gemini or Groq stream an answer.
@@ -32,12 +32,12 @@
 
 ---
 
-> **Protocol status:** This MVP uses a custom Solana payment flow with HTTP `402` and an `X-Payment-Signature` header. It is **not yet a full implementation of the x402 protocol**; the name describes the product direction.
+> **Protocol status:** This MVP uses a custom Solana payment flow with HTTP `402` and an `X-Payment-Signature` header. It is **not yet a full implementation of the x402 protocol**.
 
 ## Screenshots
 
 <p align="center">
-  <img src="assets/demo-desktop.png" alt="Solana x402 AI Proxy desktop interface showing answer modes and live request pricing" width="100%" />
+  <img src="assets/demo-desktop.png" alt="PromptSOL desktop interface showing answer modes and live request pricing" width="100%" />
 </p>
 
 <p align="center">
@@ -54,7 +54,7 @@ Pitch video link will be added here.
 
 ## The idea
 
-AI tools often put a subscription between a person and a single answer. Solana x402 AI Proxy explores a smaller transaction: ask one question, approve one transparent Devnet payment, and receive one streamed response.
+AI tools often put a subscription between a person and a single answer. PromptSOL explores a smaller transaction: ask one question, approve one transparent Devnet payment, and receive one streamed response.
 
 The proxy verifies the on-chain transfer before it contacts an AI provider. If Gemini is rate-limited or unavailable, it can retry with Groq using the same confirmed payment.
 

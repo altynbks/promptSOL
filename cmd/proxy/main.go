@@ -65,7 +65,7 @@ func main() {
 	})
 	mux.Handle("/", http.FileServer(http.FS(web)))
 	server := &http.Server{Addr: cfg.ListenAddr, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
-	log.Printf("Solana x402 AI Proxy listening on %s; RPC=%s", cfg.ListenAddr, cfg.RPCURL)
+	log.Printf("PromptSOL listening on %s; RPC=%s", cfg.ListenAddr, cfg.RPCURL)
 	if cfg.GroqKey == "" {
 		log.Printf("Groq fallback is disabled; set GROQ_API_KEY to enable it")
 	} else {

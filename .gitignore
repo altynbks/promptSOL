@@ -1,8 +1,6 @@
 .gocache/
-proxy.exe
 *.exe
-/proofpilot
-/solana-x402-ai-proxy
+/promptsol
 build-output.txt
 node_modules/
 .env

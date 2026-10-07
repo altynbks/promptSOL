@@ -1,5 +1,5 @@
 {
-  "name": "solana-x402-ai-proxy-demo",
+  "name": "promptsol-demo",
   "private": true,
   "type": "module",
   "scripts": { "demo": "node demo/client.mjs" },
