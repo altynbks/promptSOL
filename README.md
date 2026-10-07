@@ -2,10 +2,10 @@
   <img src="assets/logo.svg" alt="PromptSOL logo" width="92" />
 </p>
 
-<h1 align="center">PromptSOL</h1>
-<h3 align="center">One prompt. One payment. One AI answer.</h3>
+<h1 align="center">⚡ PromptSOL</h1>
+<h3 align="center">Pay-per-request AI on Solana</h3>
 
-<p align="center">Pay-per-request AI on Solana.</p>
+<p align="center">One prompt. One transparent quote. One on-chain payment. One streamed AI answer.</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Go-1.22-00ADD8?logo=go&logoColor=white" alt="Go 1.22" />
@@ -15,49 +15,64 @@
 </p>
 
 <p align="center">
-  <a href="#demo-video">▶ Demo video</a>
+  <a href="https://youtu.be/T9LgiqpkvSE?si=yln21xZDjIW0Xpsp">🎥 Demo video</a>
   &nbsp;·&nbsp;
-  <a href="#pitch-video">▶ Pitch video</a>
+  <a href="https://youtu.be/nSKqAEGPXvM?si=xXWSIOS6mS397jxw">🎤 Pitch video</a>
   &nbsp;·&nbsp;
-  <a href="#run-it-locally">Run it locally</a>
+  <a href="#how-it-works">⚙️ How it works</a>
+  &nbsp;·&nbsp;
+  <a href="#run-it-locally">🚀 Run locally</a>
 </p>
 
+---
+
+## 💡 Executive summary
+
+PromptSOL is a pay-per-request AI proxy built on Solana. It gives users an upfront, token-based price estimate, verifies a one-time SOL payment on Devnet, and streams an answer from Groq or Gemini. No subscription or account is needed.
+
+## 🧑‍⚖️ The demo flow
+
+| 1 · Ask | 2 · See the price | 3 · Approve | 4 · Get the answer |
+|---|---|---|---|
+| Enter a question and choose Quick, Balanced, or Detailed. | The quote updates before payment, based on the prompt and answer length. | Confirm one native SOL transfer in Phantom on Devnet. | PromptSOL verifies the transaction and streams the AI response. |
+
+With `GROQ_API_KEY`, Groq is the primary provider and Gemini is the fallback. If Groq is unavailable, PromptSOL can switch providers using the same confirmed payment. Without a Groq key, requests go directly to Gemini.
+
+## ✨ Why PromptSOL
+
+- **Pay only when you ask.** Each AI request has its own price and payment.
+- **Know the price first.** The quote is shown before Phantom opens.
+- **Choose the answer depth.** Quick, Balanced, and Detailed have different output limits.
+- **Watch the answer arrive.** Responses stream live from the active AI provider.
+
+> **MVP scope:** Solana Devnet and test SOL only. Token counts are estimates, and the chosen output allowance is charged upfront. PromptSOL uses a custom HTTP 402 payment flow; it is not yet a full implementation of the x402 protocol.
+
+## 🏗️ How it works
+
+```mermaid
+flowchart LR
+    A[Ask a question] --> B[Get a price quote]
+    B --> C[Approve SOL in Phantom]
+    C --> D[Verify payment on Solana]
+    D --> E[Stream answer from Groq or Gemini]
+```
+
+The Go proxy estimates the request price, verifies the transaction recipient and amount, prevents signature reuse within its running process, then forwards the paid request to the AI provider.
+
+---
+
+## 🖥️ Screenshots
+
 <p align="center">
-  <img src="assets/demo-desktop.png" alt="PromptSOL interface with live price estimate and three response lengths" width="100%" />
+  <img src="assets/demo-desktop.png" alt="PromptSOL with a live estimate and three answer-length choices" width="100%" />
 </p>
 
 <details>
-  <summary>See the payment card up close</summary>
-  <p align="center"><img src="assets/request-panel.png" alt="PromptSOL prompt, response-length options, quote, and wallet action" width="75%" /></p>
+  <summary>See the request panel</summary>
+  <p align="center"><img src="assets/request-panel.png" alt="Prompt, answer length, quote, and Phantom payment action" width="75%" /></p>
 </details>
 
-## One question shouldn’t require a subscription
-
-PromptSOL explores a simple idea: let someone pay for the AI response they need, one request at a time. The user sees an estimated price, approves a single SOL transfer in Phantom, and gets a streamed answer.
-
-## From prompt to answer
-
-| 1 · Ask | 2 · Review | 3 · Approve | 4 · Receive |
-|---|---|---|---|
-| Enter a question and choose Quick, Balanced, or Detailed. | See the estimated price before opening the wallet. | Confirm the native SOL transfer in Phantom on Devnet. | The proxy verifies payment, then streams the AI response. |
-
-Groq is the primary provider when `GROQ_API_KEY` is configured. Gemini remains available as a fallback, so PromptSOL can switch providers using the same confirmed payment. Without a Groq key, Gemini is used directly.
-
-## Why this approach
-
-- **No subscription for a one-off question.** Each request has its own quote and payment.
-- **The price is visible first.** The estimate updates with the prompt and selected answer length.
-- **The user chooses response depth.** Quick, Balanced, and Detailed set distinct output budgets.
-
-> **MVP scope:** Devnet and test SOL only. Token counts are estimates, and the selected output allowance is charged upfront. PromptSOL uses a custom HTTP 402 payment flow; it is not yet a full implementation of the x402 protocol.
-
-## Demo video
-
-Demo video link will be added here.
-
-## Pitch video
-
-Pitch video link will be added here.
+---
 
 ## Run it locally
 
@@ -72,6 +87,10 @@ You’ll need Docker Desktop, a Phantom wallet set to Solana Devnet, a Devnet re
    ```
 
 4. Open [http://localhost:8080](http://localhost:8080), connect Phantom, and try a prompt. Use Devnet test SOL only.
+
+## Deploy to Vercel
+
+PromptSOL includes a Vercel container configuration in [`Dockerfile.vercel`](Dockerfile.vercel). Follow the [Vercel deployment guide](docs/VERCEL.md) to configure the container port and provider secrets. Keep the demo on Devnet; payment replay protection is currently stored in memory and is not shared across Vercel instances.
 
 ## For technical reviewers
 
@@ -134,6 +153,7 @@ Paid chat requests include `X-Payment-Signature`. The proxy verifies the confirm
 | Variable | Required | Purpose |
 |---|:---:|---|
 | `SOLANA_WALLET_ADDRESS` | Yes | Devnet payment recipient. |
+| `PORT` | No | HTTP listener port; set to `8080` for Vercel container routing. |
 | `UPSTREAM_API_KEY` | Yes | Gemini API key, used as fallback when Groq is configured. |
 | `GEMINI_MODEL` | No | Gemini fallback model. Defaults to `gemini-3.8-flash`. |
 | `GROQ_API_KEY` | No | Enables Groq as the primary provider; without it, Gemini is primary. |
