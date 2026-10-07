@@ -19,7 +19,7 @@
   &nbsp;·&nbsp;
   <a href="https://youtu.be/nSKqAEGPXvM?si=xXWSIOS6mS397jxw">🎤 Pitch video</a>
   &nbsp;·&nbsp;
-  <a href="https://powerpoint.cloud.microsoft/open/onedrive/?docId=spo_nzrlndcxzwetyweyny00yzu4lwezm2utythlmdcxytaymmrjlgqwmje2zmjhltdkzjatndbhnc1hodazltk1yjk5nda3otu3miwyodm3ztmzmc1hzduyltq5mzqtowe1zc1hnti0yjfhzwyzzja_01fkd7wetwjq2nm5cc35byvcdk2zdf4x4p&driveId=E3E431D85B91B8BF&wdOrigin=APPHOME-WEB.DIRECT%2CAPPHOME-WEB.JUMPBACKIN-OCDI&wdPreviousSession=84e9faf9-52fd-4cc9-9425-79d5bfce8a76&wdPreviousSessionSrc=AppHomeWeb&ct=1791394298911">📊 PowerPoint presentation</a>
+  <a href="https://docs.google.com/presentation/d/1cbjblpCg4mAqPi22V8kVkH9Kffu-S-9sD60maq7EodA/edit?usp=drive_link">📊 Presentation slides</a>
   &nbsp;·&nbsp;
   <a href="#how-it-works">⚙️ How it works</a>
   &nbsp;·&nbsp;
